@@ -11,9 +11,14 @@ const connectToDb = mysql.createConnection({
   password: "",
   database: "employee_DB",
 },
-console.log('connected to employee_DB')
+console.log('connected to employee_db')
 );
-menu();
+connectToDb.connect(function (err){
+if(err) throw err
+
+startPrompts();
+
+});
 
 // starting menu prompt
 
