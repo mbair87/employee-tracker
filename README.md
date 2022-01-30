@@ -21,3 +21,6 @@ Laguages used: JavaScript,Node, MySQL, Inquirer.
 
 ## Questions
 Please contact no with any questions.
+
+## Functionality 
+Please see video of app demonstrating functionality at this link: https://youtu.be/0UKZBHrzhig
