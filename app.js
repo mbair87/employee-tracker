@@ -1,6 +1,7 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
 const consoleTable = require("console.table");
+const e = require("express");
 
 // Connect to database
 const connectToDb = mysql.createConnection(
@@ -157,48 +158,61 @@ const addRole = () => {
 const addEmployee = () => {
   connectToDb.query("SELECT * FROM role", function (err, res) {
     if (err) throw err;
+    connectToDb.query("SELECT * FROM employee", function (err, employeeData) {
+    if (err) throw err;
     inquirer
-      .prompt([
+    .prompt([
+      {
+        name: "first_name",
+        type: "input",
+        message: "What is the employee's first name?",
+      },
+      {
+        name: "last_name",
+        type: "input",
+        message: "What is the employee's last name?",
+      },
+      {
+        type: "list",
+        name: "role_id",
+        message: "What is the role of the new employee?",
+        choices: res.map((role) => role.title),
+      },
+      {
+        name: "manager_name",
+        type: "list",
+        message: "Who is this employee's manager?",
+        choices: employeeData.map((employee) => employee.first_name + " " + employee.last_name)
+        
+      },
+    ])
+    .then(function (data) {
+      const roleTitle = res.find((role) => role.title === data.role_id);
+      let managerID 
+      for (let i = 0; i < employeeData.length; i++) {
+      
+        if (employeeData[i].first_name + " " + employeeData[i].last_name === data.manager_name) {
+          managerID = employeeData[i].id
+        }
+      }
+      connectToDb.query(
+        "INSERT INTO employee SET ?",
         {
-          name: "first_name",
-          type: "input",
-          message: "What is the employee's first name?",
+          first_name: data.first_name,
+          last_name: data.last_name,
+          role_id: roleTitle.id,
+          manager_id: managerID
         },
-        {
-          name: "last_name",
-          type: "input",
-          message: "What is the employee's last name?",
-        },
-        {
-          type: "list",
-          name: "role_id",
-          message: "What is the role of the new employee?",
-          choices: res.map((role) => role.title),
-        },
-        {
-          name: "manager_name",
-          type: "input",
-          message: "Who is this employee's manager?",
-          
-        },
-      ])
-      .then(function (data) {
-        const roleTitle = res.find((role) => role.title === data.role_id);
-        connectToDb.query(
-          "INSERT INTO employee SET ?",
-          {
-            first_name: data.first_name,
-            last_name: data.last_name,
-            role_id: roleTitle.id,
-          },
-          function (err, res) {
-            if (err) throw err;
-            console.log("Added new employee");
-            menu();
-          }
-        );
-      });
-  });
+        function (err, res) {
+          if (err) throw err;
+          console.log("Added new employee");
+          menu();
+        }
+      );
+    });
+});
+  })
+    
 };
 
 //update employee role  updateEmployeeRole
@@ -213,7 +227,7 @@ const updateEmployeeRole = () => {
           name: "employeeName",
           message: "Which employee's role would you like to update?",
           choices: res.map(
-            (employee) => employee.first_name
+            (employee) => employee.first_name + " " + employee.last_name
           ),
         },
       ])
@@ -234,11 +248,13 @@ const updateEmployeeRole = () => {
               const updatedRole = res.find(
                 (role) => role.title === data.newRole_id
               );
+              const first_name = updatedEmployee.split(" ")[0];
+              const last_name = updatedEmployee.split(" ")[1];
               connectToDb.query(
                 "UPDATE employee SET ? WHERE first_name =" +
                   '"' +
-                  updatedEmployee +
-                  '"',
+                  first_name +
+                  '"AND last_name=' + '"' + last_name + '"',
                 {
                   role_id: updatedRole.id,
                 },
