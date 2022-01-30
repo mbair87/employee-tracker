@@ -116,14 +116,14 @@ const addRole = () => {
     inquirer
       .prompt([
         {
-            type: "input",
-            name: "title",
-            message: "What role would you like to add?"
+          type: "input",
+          name: "title",
+          message: "What role would you like to add?",
         },
         {
-            type: "input", 
-            name: "salary",
-            message: "What is the salary for the role?"
+          type: "input",
+          name: "salary",
+          message: "What is the salary for the role?",
         },
         {
           type: "list",
@@ -133,12 +133,14 @@ const addRole = () => {
         },
       ])
       .then(function (data) {
-        const departmentName = res.find((department) => department.name === data.department_id);
+        const departmentName = res.find(
+          (department) => department.name === data.department_id
+        );
         connectToDb.query(
           "INSERT INTO role SET ?",
           {
             title: data.title,
-          salary: data.salary,
+            salary: data.salary,
             department_id: departmentName.id,
           },
           function (err, res) {
@@ -175,8 +177,9 @@ const addEmployee = () => {
         },
         {
           name: "manager_name",
-          type: "list",
-          message: "What is the ID of the employee's manager?",
+          type: "input",
+          message: "Who is this employee's manager?",
+          
         },
       ])
       .then(function (data) {
@@ -199,3 +202,54 @@ const addEmployee = () => {
 };
 
 //update employee role  updateEmployeeRole
+
+const updateEmployeeRole = () => {
+  connectToDb.query("SELECT * FROM employee", function (err, res) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "employeeName",
+          message: "Which employee's role would you like to update?",
+          choices: res.map(
+            (employee) => employee.first_name
+          ),
+        },
+      ])
+      .then(function (data) {
+        const updatedEmployee = data.employeeName;
+        connectToDb.query("SELECT * FROM role", function (err, res) {
+          if (err) throw err;
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "newRole_id",
+                message: "What is the employee's new role?",
+                choices: res.map((role) => role.title),
+              },
+            ])
+            .then(function (data) {
+              const updatedRole = res.find(
+                (role) => role.title === data.newRole_id
+              );
+              connectToDb.query(
+                "UPDATE employee SET ? WHERE first_name =" +
+                  '"' +
+                  updatedEmployee +
+                  '"',
+                {
+                  role_id: updatedRole.id,
+                },
+                function (err, res) {
+                  if (err) throw err;
+                  console.log("Employee role updated.");
+                  menu();
+                }
+              );
+            });
+        });
+      });
+  });
+};
